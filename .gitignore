@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+.build/
+.dist/
+.pytest_cache/
+.coverage*
+htmlcov/
+.mypy_cache/
+.cache/
+*.log
+
+# Environments
+venv/
+env/
+.env
+.env.*
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE / Editors
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# FastF1 cache
+f1_cache/
+
+# Node / Frontend
+node_modules/
+
+# Build artifacts
+/build/
+/dist/
+/site/
+
+# Misc
+*.tmp
+*.swp
+*.swo
+
