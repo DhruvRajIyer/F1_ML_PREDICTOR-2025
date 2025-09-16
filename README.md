@@ -4,61 +4,97 @@
 
 Welcome to the **F1 Predictions 2025** repository! This project uses **machine learning, FastF1 API data, and historical F1 race results** to predict race outcomes for the 2025 Formula 1 season.
 
-## 🚀 Project Overview
-This repository contains a **Gradient Boosting Machine Learning model** that predicts race results based on past performance, qualifying times, and other structured F1 data. The model leverages:
-- FastF1 API for historical race data
-- 2024 race results
-- 2025 qualifying session results
-- Over the course of the season we will be adding additional data to improve our model as well
-- Feature engineering techniques to improve predictions
+## 🚀 Overview
+F1 Predictions 2025 is a Streamlit web app and ML toolkit that predicts race outcomes using:
 
-## 📊 Data Sources
-- **FastF1 API**: Fetches lap times, race results, and telemetry data
-- **2025 Qualifying Data**: Used for prediction
-- **Historical F1 Results**: Processed from FastF1 for training the model
+- FastF1 data (laps, sessions, timing, weather)
+- Qualifying performance and engineered features (team priors, grid effects, weather, interactions)
+- Ensemble ML models with robust preprocessing
 
-## 🏁 How It Works
-1. **Data Collection**: The script pulls relevant F1 data using the FastF1 API.
-2. **Preprocessing & Feature Engineering**: Converts lap times, normalizes driver names, and structures race data.
-3. **Model Training**: A **Gradient Boosting Regressor** is trained using 2024 race results.
-4. **Prediction**: The model predicts race times for 2025 and ranks drivers accordingly.
-5. **Evaluation**: Model performance is measured using **Mean Absolute Error (MAE)**.
+You can run the interactive app locally, inspect tables/plots, and tune between a Basic and Advanced model.
 
-### Dependencies
-- `fastf1`
-- `numpy`
-- `pandas`
-- `scikit-learn`
-- `matplotlib`
+## ✨ Key Features
+- Interactive Streamlit app with F1-themed UI (`app.py`, `run_app.py`)
+- Two model modes:
+  - Basic: Gradient Boosting on qualifying features
+  - Advanced: Ensemble (GradientBoosting + RandomForest + Ridge) with learned weights
+- Feature engineering for F1 domain: team priors, qualifying advantage/position, grid advantage, weather complexity/adaptation, interactions
+- Deterministic confidence scores that reflect field tightness and team reliability
+- Robust fallbacks and safe clipping for realistic predictions
 
-## File Structure 
-- For every race the end of the file will be numbered in correlation to the race on the calendar, ex. prediction1 - Australia, prediction2 - China, etc.
+## 🧱 Project Structure
+```
+app/
+  data/               # data loaders, weather
+  models/             # predictor core (DataProcessor, FeatureEngineer, F1Predictor)
+  ui/                 # components and styles for Streamlit
+  visualization/      # plot helpers
+app.py                # Streamlit app entry
+run_app.py            # App runner (python run_app.py)
+prediction*.py        # Standalone experiments per race
+requirements.txt      # Python dependencies
+README.md             # You are here
+```
 
-## 🔧 Usage
-Run the prediction script:
+## ⚙️ Quickstart
+1) Create and activate a virtual environment (recommended):
 ```bash
-python3 prediction1.py
-```
-Expected output:
-```
-🏁 Predicted 2025 Australian GP Winner 🏁
-Driver: Charles Leclerc, Predicted Race Time: 82.67s
-...
-🔍 Model Error (MAE): 3.22 seconds
+python3 -m venv venv
+source venv/bin/activate
 ```
 
-## 📈 Model Performance
-The Mean Absolute Error (MAE) is used to evaluate how well the model predicts race times. Lower MAE values indicate more accurate predictions.
+2) Install dependencies:
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 
-## 📌 Future Improvements
-- Incorporate **weather conditions** as a feature
-- Add **pit stop strategies** into the model
-- Explore **deep learning** models for improved accuracy
-- @mar_antaya on Instagram and TikTok will update with the latest predictions before every race of the 2025 F1 season
+3) Run the app:
+```bash
+python run_app.py -p 8502
+```
+Open your browser at http://localhost:8502
+
+## 🔍 Predictor Internals (app/models/predictor.py)
+- `DataProcessor`: imputes (median/mean/KNN) and scales (Robust/Standard/Quantile) features.
+- `FeatureEngineer`:
+  - Normalizes team names (e.g., "Red Bull" → "Red Bull Racing", "Racing Bulls" → "RB")
+  - Builds features: team priors, qualifying advantage/position, grid advantage, normalized qual time, weather complexity/adaptation, interactions
+  - Selects features per mode (Basic vs Advanced)
+- `F1Predictor`:
+  - Trains Basic or Advanced model, learns realistic clipping bounds for race-time predictions from data when possible
+  - Predicts and clips to plausible ranges; provides `predict_race_results(...)` with positions and confidence
+- `EnsembleF1Predictor` (Advanced):
+  - GradientBoosting + RandomForest + Ridge, weighted by adaptive KFold CV scores
+
+## 🧪 Using the library
+```python
+from app.models.predictor import F1Predictor, predict_race_results
+
+# qualifying_df must have: ['Driver', 'Team', 'QualifyingTime']
+predictor = F1Predictor(model_type='advanced')
+predictor.train(qualifying_df, weather_data={'rain_probability': 0.2, 'temperature': 24, 'humidity': 55})
+pred = predictor.predict(qualifying_df)
+
+results = predict_race_results(qualifying_df, model_type='advanced', model=predictor)
+print(results.head())
+```
+
+## 🧰 Troubleshooting
+- Streamlit not found: activate your venv and `pip install -r requirements.txt`
+- macOS Watchdog prompt: optional, speeds up reload (`xcode-select --install`, then `pip install watchdog`)
+- FastF1 cache: created automatically at `f1_cache/` (ignored by git). To clear: delete the folder.
+- Data merge warnings in app logs: the app will fall back to simulated qualifying data if a session fails to provide expected columns.
+
+## 🗺️ Roadmap
+- Track-specific priors (lap counts, SC frequency, overtaking difficulty)
+- More strategy-aware features (pit loss, stint degradation)
+- Optional model persistence with `save_model` / `load_model`
 
 ## 📜 License
-This project is licensed under the MIT License.
+MIT
 
+## 🙏 Acknowledgements
+We would like to thank the FastF1 API team for providing the data used in this project.
 
 🏎️ **Start predicting F1 races like a data scientist!** 🚀
-
